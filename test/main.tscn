@@ -1,0 +1,314 @@
+[gd_scene load_steps=16 format=3 uid="uid://dmgxl7an8o7pn"]
+
+[ext_resource type="Script" path="res://ActionsClasses/ActionProcessor.gd" id="1_mmb4e"]
+[ext_resource type="Script" path="res://FieldObjectClasses/FieldObjectMap.gd" id="2_tx2pc"]
+
+[sub_resource type="GDScript" id="GDScript_qfrmm"]
+script/source = "extends Node2D
+
+
+const OBJECT = preload(\"res://test/LinearMoveObject.tscn\")
+
+
+func _ready() -> void: 
+	%FieldObjectMap.add_object(
+		FieldObjectFactory.get_instance(OBJECT, Vector2i(5, 5), FieldObject.Sides.DEFENCE)
+	)
+
+	%FieldObjectMap.add_object(
+		FieldObjectFactory.get_instance(OBJECT, Vector2i(7, 3), FieldObject.Sides.ATTACK)
+	)
+"
+
+[sub_resource type="GDScript" id="GDScript_rde56"]
+script/source = "extends Node
+
+var object : FieldObject
+var ability : String = \"\"
+
+func choose(fo:FieldObject):
+	if fo == object:
+		return
+	
+	object = fo
+	ability = \"\"
+	
+	%GUI/Base/AbilitiesPanel/AbilitiesButtons.build_for_field_object(fo)
+
+func choose_ability(ability_name:String):
+	ability = ability_name
+
+
+func get_apply_ability_action(to:Vector2i) -> Action:
+	if not has_chosen():
+		return
+	
+	if not object.abilities_data.has(ability):
+		return
+	
+	
+	return %Abilities.abilities[ability].get_action(object, to)
+
+
+func has_chosen() -> bool:
+	return object != null
+
+
+func unchoose():
+	object = null
+	ability = \"\"
+"
+
+[sub_resource type="GDScript" id="GDScript_dgca5"]
+script/source = "extends Node
+
+
+var cell : Vector2i = Vector2i()
+"
+
+[sub_resource type="GDScript" id="GDScript_8cm6s"]
+script/source = "extends Node
+
+
+var abilities : Dictionary = {}
+
+func _ready():
+	abilities[LinearMoveAbility.NAME] = LinearMoveAbility.new()
+"
+
+[sub_resource type="GDScript" id="GDScript_fkqau"]
+script/source = "extends Node
+
+
+func _unhandled_input(event):
+	if event is InputEventMouseMotion:
+		%MouseCell.cell = %GameField.iso_hex_transformations.pixel2hex(
+			%GameField.get_local_mouse_position()
+		)
+	
+	
+	if event.is_action_pressed(\"mouse_left\"):
+		var obj : FieldObject = %FieldObjectMap.get_first_object_on_cell(%MouseCell.cell)
+		
+		if obj != null:
+			%Chosen.choose(obj)
+			%AbilityDrawRuleController.clear_rule()
+			
+		elif %Chosen.object != null:
+			var action : Action = %Chosen.get_apply_ability_action(
+				%MouseCell.cell
+			)
+			
+			if action != null:
+				%ActionProcessor.put_action(action)
+
+
+
+func _on_abilities_buttons_ability_pressed(ability):
+	if %Chosen.ability != ability:
+		%Chosen.ability = ability
+		
+		if ability == LinearMoveAbility.NAME:
+			var g = LinearMoveDrawRule.new()
+			
+			g.init_params(%Chosen.object, %FieldObjectMap.get_solid_objects_cells_area())
+			
+			%AbilityDrawRuleController.set_rule(g)
+"
+
+[sub_resource type="GDScript" id="GDScript_wxxsl"]
+script/source = "extends Node
+
+
+var current_draw_rule : FieldDrawRule
+
+
+func set_rule(rule:FieldDrawRule):
+	clear_rule()
+	current_draw_rule = rule
+	
+	%GameField.add_child(current_draw_rule)
+
+
+func clear_rule():
+	if current_draw_rule != null:
+		current_draw_rule.queue_free()
+		current_draw_rule = null
+"
+
+[sub_resource type="GDScript" id="GDScript_5k726"]
+script/source = "extends GameField
+
+
+func _process(delta):
+	queue_redraw()
+	
+	for i in get_tree().get_nodes_in_group(\"FieldVisual2D\"):
+		i.global_position = to_global(iso_hex_transformations.hex2pixel(i.field_position))
+
+
+"
+
+[sub_resource type="GDScript" id="GDScript_616kv"]
+script/source = "extends FieldDrawRule
+
+
+func _on_draw(field:GameField):
+	for i in field.hex_map.get_all_map_hexes():
+		field.draw_internal_hex(i, Color(1, 1, 1, 0.3), 0.9)
+"
+
+[sub_resource type="GDScript" id="GDScript_7mif4"]
+script/source = "extends FieldDrawRule
+
+
+func _on_draw(field:GameField):
+	if field.hex_map.is_hex_in_map(%MouseCell.cell):
+		field.encircle_hex(%MouseCell.cell, Color.WHITE)
+"
+
+[sub_resource type="GDScript" id="GDScript_m5a4j"]
+script/source = "extends FieldDrawRule
+
+
+@onready
+var field_object_map : FieldObjectMap = %FieldObjectMap
+
+
+func _on_draw(field:GameField):
+	for i in field_object_map.get_all_objects():
+		var color : Color
+		if i.side == FieldObject.Sides.ATTACK:
+			color = Color.RED
+		else:
+			color = Color.GREEN
+		
+		field.draw_internal_hex(i.position, color, 0.7)
+"
+
+[sub_resource type="GDScript" id="GDScript_pklfo"]
+script/source = "extends FieldDrawRule
+
+
+
+func _on_draw(field:GameField):
+	if %Chosen.object != null:
+		field.encircle_hex(%Chosen.object.position, Color.YELLOW)
+"
+
+[sub_resource type="GDScript" id="GDScript_jvw1s"]
+script/source = "extends CanvasLayer
+
+
+
+
+func _on_abilities_buttons_ability_pressed(ability):
+	print(ability)
+"
+
+[sub_resource type="GDScript" id="GDScript_651hj"]
+script/source = "extends HBoxContainer
+
+signal ability_pressed(ability:String)
+
+
+func build_for_field_object(go:FieldObject):
+	for i in get_children():
+		i.queue_free()
+	
+	for i in go.abilities_data.keys():
+		var b:Button = Button.new()
+		b.text = i
+		b.name = i
+		
+		b.pressed.connect(func(): emit_signal(\"ability_pressed\", i))
+		
+		add_child(b)
+"
+
+[node name="main" type="Node2D"]
+script = SubResource("GDScript_qfrmm")
+
+[node name="Chosen" type="Node" parent="."]
+unique_name_in_owner = true
+script = SubResource("GDScript_rde56")
+
+[node name="MouseCell" type="Node" parent="."]
+unique_name_in_owner = true
+script = SubResource("GDScript_dgca5")
+
+[node name="ActionProcessor" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("1_mmb4e")
+
+[node name="Abilities" type="Node" parent="."]
+unique_name_in_owner = true
+script = SubResource("GDScript_8cm6s")
+
+[node name="FieldObjectMap" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_tx2pc")
+
+[node name="Inputs" type="Node" parent="."]
+script = SubResource("GDScript_fkqau")
+
+[node name="AbilityDrawRuleController" type="Node" parent="."]
+unique_name_in_owner = true
+script = SubResource("GDScript_wxxsl")
+
+[node name="GameField" type="Node2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(566, 80)
+script = SubResource("GDScript_5k726")
+map_size = 7
+hex_size = 40
+metadata/_edit_group_ = true
+
+[node name="GridDraw" type="Node" parent="GameField"]
+script = SubResource("GDScript_616kv")
+
+[node name="MouseDraw" type="Node" parent="GameField"]
+script = SubResource("GDScript_7mif4")
+
+[node name="FieldObjectsEncircle" type="Node" parent="GameField"]
+script = SubResource("GDScript_m5a4j")
+
+[node name="ChosenEncircle" type="Node" parent="GameField"]
+script = SubResource("GDScript_pklfo")
+
+[node name="GUI" type="CanvasLayer" parent="."]
+unique_name_in_owner = true
+script = SubResource("GDScript_jvw1s")
+
+[node name="Base" type="Control" parent="GUI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="AbilitiesPanel" type="Control" parent="GUI/Base"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="AbilitiesButtons" type="HBoxContainer" parent="GUI/Base/AbilitiesPanel"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -135.0
+grow_horizontal = 2
+grow_vertical = 0
+script = SubResource("GDScript_651hj")
+
+[connection signal="ability_pressed" from="GUI/Base/AbilitiesPanel/AbilitiesButtons" to="Inputs" method="_on_abilities_buttons_ability_pressed"]
+[connection signal="ability_pressed" from="GUI/Base/AbilitiesPanel/AbilitiesButtons" to="GUI" method="_on_abilities_buttons_ability_pressed"]

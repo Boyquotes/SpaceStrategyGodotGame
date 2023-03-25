@@ -1,0 +1,67 @@
+[gd_scene load_steps=4 format=3 uid="uid://bkqgwbk33jgdw"]
+
+[ext_resource type="Texture2D" uid="uid://cg4bg8n0314r0" path="res://icon.svg" id="2_34acp"]
+
+[sub_resource type="GDScript" id="GDScript_4j3n4"]
+script/source = "extends FieldObject
+
+
+func _ready():
+	super()
+	
+	abilities_data[LinearMoveAbility.NAME] = LinearMoveAbilityData.new(3)
+	
+	body_type = BodyTypes.SOLID
+"
+
+[sub_resource type="GDScript" id="GDScript_drxry"]
+script/source = "extends FieldVisual2D
+
+
+class DirectMoveAction:
+	extends Action
+	
+	var _fv : FieldVisual2D
+	var _to_cell : Vector2i
+	var speed : float
+	var _elapsed_time : float = 0.0
+	var _move_time : float = 0.0
+	var _start_position : Vector2
+	
+	func _init(fv:FieldVisual2D, cell:Vector2i, avg_speed:float):
+		_fv = fv
+		_to_cell = cell
+		speed = avg_speed
+	
+	
+	func _on_start():
+		_move_time = (_fv.field_position - Vector2(_to_cell)).length()/speed
+		_start_position = _fv.field_position
+	
+	
+	func _on_process(delta):
+		if _elapsed_time >= _move_time:
+			_fv.field_position = Vector2(_to_cell)
+			completed = true
+			return
+		
+		_elapsed_time += delta
+		
+		_fv.field_position = lerp(_start_position, Vector2(_to_cell), _elapsed_time/_move_time)
+
+
+
+func _ability_animation(ability:String, to:Vector2i) -> Action:
+	return DirectMoveAction.new(self, to, 5)
+"
+
+[node name="LinearMoveObject" type="Node"]
+script = SubResource("GDScript_4j3n4")
+visual_path = NodePath("FieldVisual2D")
+
+[node name="FieldVisual2D" type="Node2D" parent="."]
+script = SubResource("GDScript_drxry")
+
+[node name="Sprite" type="Sprite2D" parent="FieldVisual2D"]
+scale = Vector2(0.359375, 0.359375)
+texture = ExtResource("2_34acp")
