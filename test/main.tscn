@@ -1,7 +1,7 @@
-[gd_scene load_steps=16 format=3 uid="uid://dmgxl7an8o7pn"]
+[gd_scene load_steps=16 format=3 uid="uid://dmes32anp2pgm"]
 
-[ext_resource type="Script" path="res://ActionsClasses/ActionProcessor.gd" id="1_mmb4e"]
-[ext_resource type="Script" path="res://FieldObjectClasses/FieldObjectMap.gd" id="2_tx2pc"]
+[ext_resource type="Script" path="res://GlobalClasses/ActionsClasses/ActionProcessor.gd" id="1_wt5e4"]
+[ext_resource type="Script" path="res://GlobalClasses/FieldObjectClasses/FieldObjectMap.gd" id="2_b0iml"]
 
 [sub_resource type="GDScript" id="GDScript_qfrmm"]
 script/source = "extends Node2D
@@ -47,7 +47,7 @@ func get_apply_ability_action(to:Vector2i) -> Action:
 		return
 	
 	
-	return %Abilities.abilities[ability].get_action(object, to)
+	return %Abilities.abilities[ability].get_apply_action(object, to)
 
 
 func has_chosen() -> bool:
@@ -99,8 +99,10 @@ func _unhandled_input(event):
 				%MouseCell.cell
 			)
 			
-			if action != null:
-				%ActionProcessor.put_action(action)
+			%Abilities.abilities[%Chosen.ability].ability_started.connect(_on_ability_started, CONNECT_ONE_SHOT)
+			%Abilities.abilities[%Chosen.ability].ability_completed.connect(_on_ability_completed, CONNECT_ONE_SHOT)
+			
+			%ActionProcessor.put_action(action)
 
 
 
@@ -114,6 +116,14 @@ func _on_abilities_buttons_ability_pressed(ability):
 			g.init_params(%Chosen.object, %FieldObjectMap.get_solid_objects_cells_area())
 			
 			%AbilityDrawRuleController.set_rule(g)
+
+
+func _on_ability_started():
+	print(\"Started\")
+
+
+func _on_ability_completed():
+	print(\"Completed\")
 "
 
 [sub_resource type="GDScript" id="GDScript_wxxsl"]
@@ -239,7 +249,7 @@ script = SubResource("GDScript_dgca5")
 
 [node name="ActionProcessor" type="Node" parent="."]
 unique_name_in_owner = true
-script = ExtResource("1_mmb4e")
+script = ExtResource("1_wt5e4")
 
 [node name="Abilities" type="Node" parent="."]
 unique_name_in_owner = true
@@ -247,7 +257,7 @@ script = SubResource("GDScript_8cm6s")
 
 [node name="FieldObjectMap" type="Node" parent="."]
 unique_name_in_owner = true
-script = ExtResource("2_tx2pc")
+script = ExtResource("2_b0iml")
 
 [node name="Inputs" type="Node" parent="."]
 script = SubResource("GDScript_fkqau")

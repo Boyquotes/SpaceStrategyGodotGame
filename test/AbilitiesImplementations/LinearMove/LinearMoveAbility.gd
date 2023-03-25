@@ -1,11 +1,11 @@
-extends RefCounted
+extends Ability
 
 class_name LinearMoveAbility
 
 const NAME = "LinearMoveAbility"
 
-func get_action(fo:FieldObject, apply_position:Vector2i):
-	var abil_data : LinearMoveAbilityData = fo.abilities_data[LinearMoveAbility.NAME]
+func _get_action(fo:FieldObject, apply_position:Vector2i):
+	var abil_data : LinearMoveAbilityData = fo.abilities_data[NAME]
 	
 	if HexPlane.get_diatance(fo.position, apply_position) > abil_data.move_remains:
 		return EmptyAction.new()
