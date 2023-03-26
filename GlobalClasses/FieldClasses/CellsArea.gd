@@ -2,7 +2,6 @@ extends RefCounted
 
 class_name CellsArea
 
-# Класс, представляющий группу точек
 
 var cells:Array = []
 

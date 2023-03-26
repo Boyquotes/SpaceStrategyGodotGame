@@ -15,6 +15,7 @@ var iso_hex_transformations:IsoHexTransformations
 
 func _enter_tree():
 	child_entered_tree.connect(_on_child_added) 
+	child_exiting_tree.connect(_on_child_removed) 
 	hex_map = HexMap.new(map_size)
 	iso_hex_transformations = IsoHexTransformations.new(hex_size)
 
@@ -62,3 +63,8 @@ func fill_internal_hex(hex:Vector2, color:Color, size:float, antialiasing:bool=f
 func _on_child_added(child:Node):
 	if child is FieldDrawRule:
 		draw.connect(child.draw_on.bind(self))
+
+
+func _on_child_removed(child:Node):
+	if child is FieldDrawRule:
+		draw.disconnect(child.draw_on)

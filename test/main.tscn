@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://dmes32anp2pgm"]
+[gd_scene load_steps=17 format=3 uid="uid://dmes32anp2pgm"]
 
 [ext_resource type="Script" path="res://GlobalClasses/ActionsClasses/ActionProcessor.gd" id="1_wt5e4"]
 [ext_resource type="Script" path="res://GlobalClasses/FieldObjectClasses/FieldObjectMap.gd" id="2_b0iml"]
@@ -99,10 +99,11 @@ func _unhandled_input(event):
 				%MouseCell.cell
 			)
 			
-			%Abilities.abilities[%Chosen.ability].ability_started.connect(_on_ability_started, CONNECT_ONE_SHOT)
-			%Abilities.abilities[%Chosen.ability].ability_completed.connect(_on_ability_completed, CONNECT_ONE_SHOT)
-			
-			%ActionProcessor.put_action(action)
+			if action != null:
+				%Abilities.abilities[%Chosen.ability].ability_started.connect(_on_ability_started, CONNECT_ONE_SHOT)
+				%Abilities.abilities[%Chosen.ability].ability_completed.connect(_on_ability_completed, CONNECT_ONE_SHOT)
+				
+				%ActionProcessor.put_action(action)
 
 
 
@@ -110,40 +111,101 @@ func _on_abilities_buttons_ability_pressed(ability):
 	if %Chosen.ability != ability:
 		%Chosen.ability = ability
 		
-		if ability == LinearMoveAbility.NAME:
-			var g = LinearMoveDrawRule.new()
-			
-			g.init_params(%Chosen.object, %FieldObjectMap.get_solid_objects_cells_area())
-			
-			%AbilityDrawRuleController.set_rule(g)
+		%AbilityDrawRuleController.set_rule_for_ability(ability)
 
 
 func _on_ability_started():
 	print(\"Started\")
+	%AbilityDrawRuleController.current_draw_rule.enabled = false
 
 
 func _on_ability_completed():
 	print(\"Completed\")
+	%AbilityDrawRuleController.current_draw_rule.enabled = true
+	%AbilityDrawRuleController.update_current()
 "
 
 [sub_resource type="GDScript" id="GDScript_wxxsl"]
 script/source = "extends Node
 
 
-var current_draw_rule : FieldDrawRule
+var current_draw_rule : AbilityDrawRule
+
+var _draw_rules : Dictionary = {} # name : FieldDrawRule
 
 
-func set_rule(rule:FieldDrawRule):
-	clear_rule()
-	current_draw_rule = rule
+func _ready():
+	for i in get_children():
+		if i is AbilityDrawRule:
+			_draw_rules[i.get_ability_name()] = i
+
+
+
+func set_rule_for_ability(ability_name:String):
+	var draw_rule = _draw_rules.get(ability_name)
 	
-	%GameField.add_child(current_draw_rule)
+	if draw_rule == null:
+		clear_rule()
+		return
+	
+	if draw_rule == current_draw_rule:
+		return
+	
+	if current_draw_rule != null:
+		current_draw_rule.reparent(self)
+	
+	current_draw_rule = draw_rule
+	
+	current_draw_rule.start()
+	
+	current_draw_rule.reparent(%GameField)
+	current_draw_rule.owner = owner
+
+
+func update_current():
+	if current_draw_rule == null:
+		return
+	
+	current_draw_rule.update()
 
 
 func clear_rule():
-	if current_draw_rule != null:
-		current_draw_rule.queue_free()
-		current_draw_rule = null
+	if current_draw_rule == null:
+		return
+	
+	current_draw_rule.reparent(self)
+	current_draw_rule.owner = owner
+	current_draw_rule = null
+"
+
+[sub_resource type="GDScript" id="GDScript_tat8k"]
+script/source = "extends AbilityDrawRule
+
+
+var _fo : FieldObject
+var _obstacles : CellsArea
+
+
+func _name():
+	return LinearMoveAbility.NAME
+
+
+func _on_start():
+	_fo = %Chosen.object
+	_obstacles = %FieldObjectMap.get_solid_objects_cells_area()
+
+
+func _on_update():
+	_obstacles = %FieldObjectMap.get_solid_objects_cells_area()
+
+
+
+func _on_draw(field:GameField):
+	for i in field.hex_map.get_all_map_hexes():
+		if HexPlane.get_diatance(i, _fo.position) <= _fo.abilities_data[LinearMoveAbility.NAME].move_remains:
+			if (not _obstacles.has_cell(i)) and Vector2i(i) != _fo.position:
+				field.fill_internal_hex(i, Color(0, 1, 0, 0.2), 0.6)
+
 "
 
 [sub_resource type="GDScript" id="GDScript_5k726"]
@@ -265,6 +327,9 @@ script = SubResource("GDScript_fkqau")
 [node name="AbilityDrawRuleController" type="Node" parent="."]
 unique_name_in_owner = true
 script = SubResource("GDScript_wxxsl")
+
+[node name="LinearMoveDrawRule" type="Node" parent="AbilityDrawRuleController"]
+script = SubResource("GDScript_tat8k")
 
 [node name="GameField" type="Node2D" parent="."]
 unique_name_in_owner = true

@@ -2,7 +2,6 @@ extends RefCounted
 
 class_name MoveArea
 
-# класс, хранящий в себе карту перемещений из одной точки
 
 var came_from:Dictionary = {}
 
