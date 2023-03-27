@@ -1,14 +1,14 @@
-[gd_scene load_steps=19 format=3 uid="uid://dmes32anp2pgm"]
+[gd_scene load_steps=19 format=3 uid="uid://bq5jjl37pbqu5"]
 
-[ext_resource type="Script" path="res://GlobalClasses/ActionsClasses/ActionProcessor.gd" id="1_wt5e4"]
-[ext_resource type="Script" path="res://GlobalClasses/FieldObjectClasses/FieldObjectMap.gd" id="2_b0iml"]
-[ext_resource type="PackedScene" uid="uid://ckrguperorqkx" path="res://test/ActionQueueUI.tscn" id="3_rxyi1"]
+[ext_resource type="Script" path="res://GlobalClasses/ActionsClasses/ActionProcessor.gd" id="1_ntvn1"]
+[ext_resource type="Script" path="res://GlobalClasses/FieldObjectClasses/FieldObjectMap.gd" id="2_2rgc4"]
+[ext_resource type="PackedScene" uid="uid://ckrguperorqkx" path="res://GameSources/ActionQueueUI.tscn" id="3_8vfj5"]
 
 [sub_resource type="GDScript" id="GDScript_qfrmm"]
 script/source = "extends Node2D
 
 
-const OBJECT = preload(\"res://test/LinearMoveObject.tscn\")
+const OBJECT = preload(\"res://TestContent/LinearMoveObject.tscn\")
 
 
 func _ready() -> void: 
@@ -120,7 +120,6 @@ func _unhandled_input(event):
 				return
 			
 			%ActionProcessor.put_action(action)
-
 
 
 func _on_abilities_buttons_ability_pressed(ability):
@@ -379,7 +378,7 @@ script = SubResource("GDScript_dgca5")
 
 [node name="ActionProcessor" type="Node" parent="."]
 unique_name_in_owner = true
-script = ExtResource("1_wt5e4")
+script = ExtResource("1_ntvn1")
 
 [node name="Abilities" type="Node" parent="."]
 unique_name_in_owner = true
@@ -387,7 +386,7 @@ script = SubResource("GDScript_8cm6s")
 
 [node name="FieldObjectMap" type="Node" parent="."]
 unique_name_in_owner = true
-script = ExtResource("2_b0iml")
+script = ExtResource("2_2rgc4")
 
 [node name="Inputs" type="Node" parent="."]
 script = SubResource("GDScript_fkqau")
@@ -461,7 +460,7 @@ size = Vector2i(600, 200)
 min_size = Vector2i(600, 200)
 script = SubResource("GDScript_jpt61")
 
-[node name="Base" parent="ActionQueueControlPanel" instance=ExtResource("3_rxyi1")]
+[node name="Base" parent="ActionQueueControlPanel" instance=ExtResource("3_8vfj5")]
 
 [connection signal="action_added" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_action_added"]
 [connection signal="current_completed" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_current_completed"]
