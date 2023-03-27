@@ -18,5 +18,9 @@ func _on_start():
 	completed = true
 
 
+func _can_perform():
+	return FieldObject.valid(_fo)
+
+
 func _to_string():
 	return "Move action: {0} to {1}".format([_fo.name, str(_to)])

@@ -20,6 +20,10 @@ func start():
 	_on_start()
 
 
+func can_perform() -> bool:
+	return _can_perform()
+
+
 # virtual
 func _on_process(delta:float):
 	pass
@@ -27,6 +31,10 @@ func _on_process(delta:float):
 # virtual
 func _on_start():
 	pass
+
+# virtual
+func _can_perform() -> bool:
+	return true
 
 
 func _to_string():
