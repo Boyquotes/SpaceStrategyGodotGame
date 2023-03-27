@@ -48,7 +48,7 @@ func get_apply_ability_action(to:Vector2i) -> Action:
 		return EmptyAction.new()
 	
 	
-	return %Abilities.abilities[ability].get_apply_action(object, to)
+	return %Abilities.abilities[ability].get_deferred_applying_action(object, to)
 
 
 func has_chosen() -> bool:
@@ -75,10 +75,19 @@ var cell : Vector2i = Vector2i()
 script/source = "extends Node
 
 
+signal ability_started(ability:Ability)
+signal ability_completed(ability:Ability)
+
+
 var abilities : Dictionary = {}
 
 func _ready():
 	abilities[LinearMoveAbility.NAME] = LinearMoveAbility.new()
+	
+	
+	for i in abilities.values():
+		i.ability_started.connect(func(): emit_signal(\"ability_started\", i))
+		i.ability_completed.connect(func(): emit_signal(\"ability_completed\", i))
 "
 
 [sub_resource type="GDScript" id="GDScript_fkqau"]
@@ -110,15 +119,7 @@ func _unhandled_input(event):
 			if action == null:
 				return
 			
-			var a1 : CallAction = CallAction.new(_on_ability_started)
-			var a2 : CallAction = CallAction.new(_on_ability_completed)
-			
-			var action_pack : ActionPack = ActionPack.new([
-				a1, action, a2
-			])
-			
-			%ActionProcessor.put_action(action_pack)
-			
+			%ActionProcessor.put_action(action)
 
 
 
@@ -129,23 +130,23 @@ func _on_abilities_buttons_ability_pressed(ability):
 		%AbilityDrawRuleController.set_rule_for_ability(ability)
 
 
-func _on_ability_started():
-	print(\"Started\")
-	%AbilityDrawRuleController.current_draw_rule.enabled = false
-
-
-func _on_ability_completed():
-	print(\"Completed\")
-	%AbilityDrawRuleController.current_draw_rule.enabled = true
-	%AbilityDrawRuleController.update_current()
-
-
 func _on_action_processor_next_action_picked():
 	print(\"Next action picked\")
 
 
 func _on_action_processor_current_completed():
 	print(\"Action completed\")
+
+
+func _on_abilities_ability_completed(ability):
+	print(\"Completed\")
+	%AbilityDrawRuleController.current_draw_rule.enabled = true
+	%AbilityDrawRuleController.update_current()
+
+
+func _on_abilities_ability_started(ability):
+	print(\"Started\")
+	%AbilityDrawRuleController.current_draw_rule.enabled = false
 "
 
 [sub_resource type="GDScript" id="GDScript_wxxsl"]
@@ -464,6 +465,8 @@ script = SubResource("GDScript_jpt61")
 [connection signal="current_completed" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_current_completed"]
 [connection signal="next_action_picked" from="ActionProcessor" to="Inputs" method="_on_action_processor_next_action_picked"]
 [connection signal="next_action_picked" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_next_action_picked"]
+[connection signal="ability_completed" from="Abilities" to="Inputs" method="_on_abilities_ability_completed"]
+[connection signal="ability_started" from="Abilities" to="Inputs" method="_on_abilities_ability_started"]
 [connection signal="ability_pressed" from="GUI/Base/AbilitiesPanel/AbilitiesButtons" to="Inputs" method="_on_abilities_buttons_ability_pressed"]
 [connection signal="ability_pressed" from="GUI/Base/AbilitiesPanel/AbilitiesButtons" to="GUI" method="_on_abilities_buttons_ability_pressed"]
 [connection signal="hand_mode_toggled" from="ActionQueueControlPanel/Base" to="ActionQueueControlPanel" method="_on_base_hand_mode_toggled"]
