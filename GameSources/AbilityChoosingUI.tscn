@@ -1,0 +1,77 @@
+[gd_scene load_steps=3 format=3 uid="uid://cilkpauagx4ek"]
+
+[sub_resource type="GDScript" id="GDScript_5l2it"]
+script/source = "extends Control
+
+signal ability_button_pressed(ability_name:String)
+
+
+func _on_abilities_buttons_ability_pressed(ability):
+	ability_button_pressed.emit(ability)
+
+
+func setup_for_object(object:FieldObject):
+	for i in object.abilities_data.keys():
+		%AbilitiesButtons.create_button_for_ability(i)
+
+
+func clear_buttons():
+	%AbilitiesButtons.clear_buttons()
+"
+
+[sub_resource type="GDScript" id="GDScript_651hj"]
+script/source = "extends HBoxContainer
+
+signal ability_pressed(ability:String)
+
+
+func create_button_for_ability(ability_name:String):
+	var b:Button = Button.new()
+	b.text = ability_name
+	b.name = ability_name
+	
+	b.pressed.connect(func(): emit_signal(\"ability_pressed\", ability_name))
+	
+	add_child(b)
+
+
+func clear_buttons():
+	for i in get_children():
+		i.queue_free()
+"
+
+[node name="Base" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = SubResource("GDScript_5l2it")
+
+[node name="AbilitiesPanel" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="ScrollContainer" type="ScrollContainer" parent="AbilitiesPanel"]
+layout_mode = 2
+vertical_scroll_mode = 0
+
+[node name="AbilitiesButtons" type="HBoxContainer" parent="AbilitiesPanel/ScrollContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+script = SubResource("GDScript_651hj")
+
+[connection signal="ability_pressed" from="AbilitiesPanel/ScrollContainer/AbilitiesButtons" to="." method="_on_abilities_buttons_ability_pressed"]

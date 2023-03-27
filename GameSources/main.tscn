@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://GlobalClasses/ActionsClasses/ActionProcessor.gd" id="1_ntvn1"]
 [ext_resource type="Script" path="res://GlobalClasses/FieldObjectClasses/FieldObjectMap.gd" id="2_2rgc4"]
 [ext_resource type="PackedScene" uid="uid://ckrguperorqkx" path="res://GameSources/ActionQueueUI.tscn" id="3_8vfj5"]
+[ext_resource type="PackedScene" uid="uid://cilkpauagx4ek" path="res://GameSources/AbilityChoosingUI.tscn" id="3_skgp4"]
 [ext_resource type="PackedScene" uid="uid://c0wftpahvt5f0" path="res://GameSources/ObjectControllingUI.tscn" id="4_ukry5"]
 
 [sub_resource type="GDScript" id="GDScript_qfrmm"]
@@ -118,7 +119,9 @@ func _unhandled_input(event):
 		
 		if obj != null and obj != %Chosen.object:
 			%Chosen.choose(obj)
-			%AbilitiesButtons.build_for_field_object(obj)
+			
+			%GUI/AbilityChoosingUI.setup_for_object(obj)
+			
 			%AbilityDrawRuleController.clear_rule()
 			
 		elif %Chosen.object != null:
@@ -133,13 +136,6 @@ func _unhandled_input(event):
 				return
 			
 			%ActionProcessor.put_action(action)
-
-
-func _on_abilities_buttons_ability_pressed(ability):
-	if %Chosen.ability != ability:
-		%Chosen.choose_ability(ability)
-		
-		%AbilityDrawRuleController.set_rule_for_ability(ability)
 
 
 func _on_abilities_ability_completed(ability):
@@ -313,28 +309,18 @@ script/source = "extends CanvasLayer
 
 
 
-func _on_abilities_buttons_ability_pressed(ability):
-	print(ability)
-"
-
-[sub_resource type="GDScript" id="GDScript_651hj"]
-script/source = "extends HBoxContainer
-
-signal ability_pressed(ability:String)
-
-
-func build_for_field_object(go:FieldObject):
-	for i in get_children():
-		i.queue_free()
+func _on_chosen_new_object():
+	if %Chosen.has_chosen():
+		return
 	
-	for i in go.abilities_data.keys():
-		var b:Button = Button.new()
-		b.text = i
-		b.name = i
+	$AbilityChoosingUI.clear_buttons()
+
+
+func _on_ability_choosing_ui_ability_button_pressed(ability_name):
+	if %Chosen.ability != ability_name:
+		%Chosen.choose_ability(ability_name)
 		
-		b.pressed.connect(func(): emit_signal(\"ability_pressed\", i))
-		
-		add_child(b)
+		%AbilityDrawRuleController.set_rule_for_ability(ability_name)
 "
 
 [sub_resource type="GDScript" id="GDScript_jpt61"]
@@ -469,34 +455,7 @@ script = SubResource("GDScript_pklfo")
 unique_name_in_owner = true
 script = SubResource("GDScript_jvw1s")
 
-[node name="Base" type="Control" parent="GUI"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="AbilitiesPanel" type="MarginContainer" parent="GUI/Base"]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 0
-mouse_filter = 2
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
-
-[node name="AbilitiesButtons" type="HBoxContainer" parent="GUI/Base/AbilitiesPanel"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 100)
-layout_mode = 2
-script = SubResource("GDScript_651hj")
+[node name="AbilityChoosingUI" parent="GUI" instance=ExtResource("3_skgp4")]
 
 [node name="ActionQueueControlPanel" type="Window" parent="."]
 title = "Action queue "
@@ -509,21 +468,21 @@ script = SubResource("GDScript_jpt61")
 
 [node name="ChosenControlPanel" type="Window" parent="."]
 position = Vector2i(60, 60)
-size = Vector2i(300, 200)
-min_size = Vector2i(300, 200)
+size = Vector2i(500, 200)
+min_size = Vector2i(500, 200)
 script = SubResource("GDScript_8qbeo")
 
 [node name="base" parent="ChosenControlPanel" instance=ExtResource("4_ukry5")]
 
 [connection signal="new_ability" from="Chosen" to="ChosenControlPanel" method="_on_chosen_new_ability"]
+[connection signal="new_object" from="Chosen" to="GUI" method="_on_chosen_new_object"]
 [connection signal="new_object" from="Chosen" to="ChosenControlPanel" method="_on_chosen_new_object"]
 [connection signal="action_added" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_action_added"]
 [connection signal="current_completed" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_current_completed"]
 [connection signal="next_action_picked" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_next_action_picked"]
 [connection signal="ability_completed" from="Abilities" to="Inputs" method="_on_abilities_ability_completed"]
 [connection signal="ability_started" from="Abilities" to="Inputs" method="_on_abilities_ability_started"]
-[connection signal="ability_pressed" from="GUI/Base/AbilitiesPanel/AbilitiesButtons" to="Inputs" method="_on_abilities_buttons_ability_pressed"]
-[connection signal="ability_pressed" from="GUI/Base/AbilitiesPanel/AbilitiesButtons" to="GUI" method="_on_abilities_buttons_ability_pressed"]
+[connection signal="ability_button_pressed" from="GUI/AbilityChoosingUI" to="GUI" method="_on_ability_choosing_ui_ability_button_pressed"]
 [connection signal="hand_mode_toggled" from="ActionQueueControlPanel/Base" to="ActionQueueControlPanel" method="_on_base_hand_mode_toggled"]
 [connection signal="push_queue_pressed" from="ActionQueueControlPanel/Base" to="ActionQueueControlPanel" method="_on_base_push_queue_pressed"]
 [connection signal="delete_chosen_pressed" from="ChosenControlPanel/base" to="ChosenControlPanel" method="_on_base_delete_chosen_pressed"]
