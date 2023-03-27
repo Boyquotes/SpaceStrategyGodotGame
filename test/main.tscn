@@ -42,10 +42,10 @@ func choose_ability(ability_name:String):
 
 func get_apply_ability_action(to:Vector2i) -> Action:
 	if not has_chosen():
-		return
+		return EmptyAction.new()
 	
-	if not object.abilities_data.has(ability):
-		return
+	if not chosen_correct_ability():
+		return EmptyAction.new()
 	
 	
 	return %Abilities.abilities[ability].get_apply_action(object, to)
@@ -53,6 +53,10 @@ func get_apply_ability_action(to:Vector2i) -> Action:
 
 func has_chosen() -> bool:
 	return object != null
+
+
+func chosen_correct_ability():
+	return object.abilities_data.has(ability)
 
 
 func unchoose():
@@ -91,20 +95,30 @@ func _unhandled_input(event):
 	if event.is_action_pressed(\"mouse_left\"):
 		var obj : FieldObject = %FieldObjectMap.get_first_object_on_cell(%MouseCell.cell)
 		
-		if obj != null:
+		if obj != null and obj != %Chosen.object:
 			%Chosen.choose(obj)
 			%AbilityDrawRuleController.clear_rule()
 			
 		elif %Chosen.object != null:
+			if not %Chosen.chosen_correct_ability():
+				return
+			
 			var action : Action = %Chosen.get_apply_ability_action(
 				%MouseCell.cell
 			)
 			
-			if action != null:
-				%Abilities.abilities[%Chosen.ability].ability_started.connect(_on_ability_started, CONNECT_ONE_SHOT)
-				%Abilities.abilities[%Chosen.ability].ability_completed.connect(_on_ability_completed, CONNECT_ONE_SHOT)
-				
-				%ActionProcessor.put_action(action)
+			if action == null:
+				return
+			
+			var a1 : CallAction = CallAction.new(_on_ability_started)
+			var a2 : CallAction = CallAction.new(_on_ability_completed)
+			
+			var action_pack : ActionPack = ActionPack.new([
+				a1, action, a2
+			])
+			
+			%ActionProcessor.put_action(action_pack)
+			
 
 
 

@@ -54,7 +54,7 @@ class DirectMoveAction:
 
 
 
-func _ability_animation(ability:String, to:Vector2i) -> Action:
+func _ability_animation_action(ability:String, to:Vector2i) -> Action:
 	return DirectMoveAction.new(self, to, 5)
 "
 
