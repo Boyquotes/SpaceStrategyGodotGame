@@ -1,0 +1,152 @@
+[gd_scene load_steps=4 format=3 uid="uid://c0wftpahvt5f0"]
+
+[sub_resource type="GDScript" id="GDScript_0yc61"]
+script/source = "extends Control
+
+
+signal delete_chosen_pressed
+signal unchoose_pressed
+
+
+func _on_delete_chosen_pressed():
+	delete_chosen_pressed.emit()
+
+
+func _on_unchoose_pressed():
+	unchoose_pressed.emit()
+
+
+func set_info_for_object(fo:FieldObject):
+	%ChosenObjectInfo.set_for_object(fo)
+
+
+func set_info_for_ability(ability:String):
+	%ChosenAbilityInfo.set_for_ability(ability)
+
+
+func clear_info():
+	%ChosenObjectInfo.clear()
+	%ChosenAbilityInfo.clear()
+"
+
+[sub_resource type="GDScript" id="GDScript_mibtd"]
+script/source = "extends Label
+
+
+const OBJECT_TEMPLATE = \"Chosen object node-name:\\n{0}\"
+const NO_OBJECT_TEMPLATE = \"<No chosen>\"
+
+
+
+func set_for_object(fo:FieldObject):
+	if fo == null:
+		text = NO_OBJECT_TEMPLATE
+	else:
+		text = OBJECT_TEMPLATE.format([fo.name])
+
+
+func clear():
+	text = NO_OBJECT_TEMPLATE
+"
+
+[sub_resource type="GDScript" id="GDScript_ecadm"]
+script/source = "extends Label
+
+
+const ABILITY_TEMPLATE = \"Chosen ability: \\\"{0}\\\"\"
+const NO_ABILITY_TEMPLATE = \"<No ability chosen>\"
+
+
+func set_for_ability(ability:String):
+	if ability.is_empty():
+		text = NO_ABILITY_TEMPLATE
+	else:
+		text = ABILITY_TEMPLATE.format([ability])
+
+
+func clear():
+	text = NO_ABILITY_TEMPLATE
+"
+
+[node name="base" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_0yc61")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Control" type="HSplitContainer" parent="MarginContainer"]
+layout_mode = 2
+dragger_visibility = 1
+
+[node name="TextInfo" type="Control" parent="MarginContainer/Control"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ChosenObjectInfo" type="Label" parent="MarginContainer/Control/TextInfo"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 23.0
+grow_horizontal = 2
+clip_text = true
+script = SubResource("GDScript_mibtd")
+
+[node name="ChosenAbilityInfo" type="Label" parent="MarginContainer/Control/TextInfo"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+grow_horizontal = 2
+grow_vertical = 0
+vertical_alignment = 2
+clip_text = true
+script = SubResource("GDScript_ecadm")
+
+[node name="SidePanel" type="Panel" parent="MarginContainer/Control"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+
+[node name="Buttons" type="VBoxContainer" parent="MarginContainer/Control/SidePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="DeleteChosen" type="Button" parent="MarginContainer/Control/SidePanel/Buttons"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Delete
+Chosen"
+
+[node name="Unchoose" type="Button" parent="MarginContainer/Control/SidePanel/Buttons"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Unchoose
+"
+
+[connection signal="pressed" from="MarginContainer/Control/SidePanel/Buttons/DeleteChosen" to="." method="_on_delete_chosen_pressed"]
+[connection signal="pressed" from="MarginContainer/Control/SidePanel/Buttons/Unchoose" to="." method="_on_unchoose_pressed"]
