@@ -41,6 +41,8 @@ func choose(fo:FieldObject):
 	object = fo
 	ability = \"\"
 	
+	object.tree_exiting.connect(_unchoose_chosen, CONNECT_ONE_SHOT)
+	
 	new_object.emit()
 	new_ability.emit()
 
@@ -70,6 +72,12 @@ func chosen_correct_ability():
 
 
 func unchoose():
+	object.tree_exiting.disconnect(_unchoose_chosen)
+	
+	_unchoose_chosen()
+
+
+func _unchoose_chosen():
 	object = null
 	ability = \"\"
 	
@@ -119,9 +127,7 @@ func _unhandled_input(event):
 		
 		if obj != null and obj != %Chosen.object:
 			%Chosen.choose(obj)
-			
 			%GUI/AbilityChoosingUI.setup_for_object(obj)
-			
 			%AbilityDrawRuleController.clear_rule()
 			
 		elif %Chosen.object != null:
@@ -136,6 +142,9 @@ func _unhandled_input(event):
 				return
 			
 			%ActionProcessor.put_action(action)
+	
+	if event.is_action_pressed(\"ui_up\"):
+		%Chosen.object.queue_free()
 
 
 func _on_abilities_ability_completed(ability):
@@ -317,6 +326,9 @@ func _on_chosen_new_object():
 
 
 func _on_ability_choosing_ui_ability_button_pressed(ability_name):
+	if not %Chosen.has_chosen():
+		return
+	
 	if %Chosen.ability != ability_name:
 		%Chosen.choose_ability(ability_name)
 		
