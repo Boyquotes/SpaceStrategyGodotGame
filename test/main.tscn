@@ -33,8 +33,7 @@ func choose(fo:FieldObject):
 	
 	object = fo
 	ability = \"\"
-	
-	%GUI/Base/AbilitiesPanel/AbilitiesButtons.build_for_field_object(fo)
+
 
 func choose_ability(ability_name:String):
 	ability = ability_name
@@ -106,6 +105,7 @@ func _unhandled_input(event):
 		
 		if obj != null and obj != %Chosen.object:
 			%Chosen.choose(obj)
+			%AbilitiesButtons.build_for_field_object(obj)
 			%AbilityDrawRuleController.clear_rule()
 			
 		elif %Chosen.object != null:
@@ -443,6 +443,7 @@ grow_vertical = 0
 mouse_filter = 2
 
 [node name="AbilitiesButtons" type="HBoxContainer" parent="GUI/Base/AbilitiesPanel"]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -457,7 +458,6 @@ script = SubResource("GDScript_651hj")
 title = "Action queue "
 position = Vector2i(50, 50)
 size = Vector2i(600, 200)
-always_on_top = true
 min_size = Vector2i(600, 200)
 script = SubResource("GDScript_jpt61")
 
