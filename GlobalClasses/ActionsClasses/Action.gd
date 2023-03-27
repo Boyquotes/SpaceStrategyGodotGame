@@ -27,3 +27,7 @@ func _on_process(delta:float):
 # virtual
 func _on_start():
 	pass
+
+
+func _to_string():
+	return "Unnamed action"

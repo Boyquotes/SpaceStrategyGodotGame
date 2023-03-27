@@ -48,6 +48,9 @@ class DirectMoveAction:
 		_elapsed_time += delta
 		
 		_fv.field_position = lerp(_start_position, Vector2(_to_cell), _elapsed_time/_move_time)
+	
+	func _to_string():
+		return \"Direct move animation: {0} to {1}\".format([_fv.name, str(_to_cell)])
 
 
 

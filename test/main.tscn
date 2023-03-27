@@ -1,7 +1,8 @@
-[gd_scene load_steps=17 format=3 uid="uid://dmes32anp2pgm"]
+[gd_scene load_steps=19 format=3 uid="uid://dmes32anp2pgm"]
 
 [ext_resource type="Script" path="res://GlobalClasses/ActionsClasses/ActionProcessor.gd" id="1_wt5e4"]
 [ext_resource type="Script" path="res://GlobalClasses/FieldObjectClasses/FieldObjectMap.gd" id="2_b0iml"]
+[ext_resource type="PackedScene" uid="uid://ckrguperorqkx" path="res://test/ActionQueueUI.tscn" id="3_rxyi1"]
 
 [sub_resource type="GDScript" id="GDScript_qfrmm"]
 script/source = "extends Node2D
@@ -123,6 +124,14 @@ func _on_ability_completed():
 	print(\"Completed\")
 	%AbilityDrawRuleController.current_draw_rule.enabled = true
 	%AbilityDrawRuleController.update_current()
+
+
+func _on_action_processor_next_action_picked():
+	print(\"Next action picked\")
+
+
+func _on_action_processor_current_completed():
+	print(\"Action completed\")
 "
 
 [sub_resource type="GDScript" id="GDScript_wxxsl"]
@@ -298,6 +307,47 @@ func build_for_field_object(go:FieldObject):
 		add_child(b)
 "
 
+[sub_resource type="GDScript" id="GDScript_jpt61"]
+script/source = "extends Window
+
+func _ready():
+	$Base.set_current_action_as_text(
+		%ActionProcessor.current
+	)
+	
+	$Base.set_queue_as_text(
+		%ActionProcessor.action_queue
+	)
+
+
+func _on_base_hand_mode_toggled(to):
+	%ActionProcessor.handmode = to
+
+
+func _on_base_push_queue_pressed():
+	%ActionProcessor.push_queue_in_hand_mode()
+
+
+func _on_action_processor_next_action_picked():
+	$Base.set_current_action_as_text(
+		%ActionProcessor.current
+	)
+	
+	$Base.set_queue_as_text(
+		%ActionProcessor.action_queue
+	)
+
+
+func _on_action_processor_current_completed():
+	$Base.clear_current_action_text()
+
+
+func _on_action_processor_action_added():
+	$Base.set_queue_as_text(
+		%ActionProcessor.action_queue
+	)
+"
+
 [node name="main" type="Node2D"]
 script = SubResource("GDScript_qfrmm")
 
@@ -385,5 +435,22 @@ grow_horizontal = 2
 grow_vertical = 0
 script = SubResource("GDScript_651hj")
 
+[node name="ActionQueueControlPanel" type="Window" parent="."]
+title = "Action queue "
+position = Vector2i(50, 50)
+size = Vector2i(500, 500)
+always_on_top = true
+min_size = Vector2i(500, 500)
+script = SubResource("GDScript_jpt61")
+
+[node name="Base" parent="ActionQueueControlPanel" instance=ExtResource("3_rxyi1")]
+
+[connection signal="action_added" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_action_added"]
+[connection signal="current_completed" from="ActionProcessor" to="Inputs" method="_on_action_processor_current_completed"]
+[connection signal="current_completed" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_current_completed"]
+[connection signal="next_action_picked" from="ActionProcessor" to="Inputs" method="_on_action_processor_next_action_picked"]
+[connection signal="next_action_picked" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_next_action_picked"]
 [connection signal="ability_pressed" from="GUI/Base/AbilitiesPanel/AbilitiesButtons" to="Inputs" method="_on_abilities_buttons_ability_pressed"]
 [connection signal="ability_pressed" from="GUI/Base/AbilitiesPanel/AbilitiesButtons" to="GUI" method="_on_abilities_buttons_ability_pressed"]
+[connection signal="hand_mode_toggled" from="ActionQueueControlPanel/Base" to="ActionQueueControlPanel" method="_on_base_hand_mode_toggled"]
+[connection signal="push_queue_pressed" from="ActionQueueControlPanel/Base" to="ActionQueueControlPanel" method="_on_base_push_queue_pressed"]

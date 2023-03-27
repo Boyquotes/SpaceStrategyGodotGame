@@ -16,3 +16,7 @@ func _on_start():
 	_fo.position = _to
 	
 	completed = true
+
+
+func _to_string():
+	return "Move action: {0} to {1}".format([_fo.name, str(_to)])

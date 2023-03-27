@@ -1,0 +1,154 @@
+[gd_scene load_steps=2 format=3 uid="uid://ckrguperorqkx"]
+
+[sub_resource type="GDScript" id="GDScript_jbgbt"]
+script/source = "extends Control
+
+
+signal push_queue_pressed
+signal hand_mode_toggled(to:bool)
+
+
+@export
+var queue_max_strings : int = 4
+
+@export
+var parallel_max_strings : int = 2
+
+
+func _on_push_queue_pressed():
+	push_queue_pressed.emit()
+
+
+func _on_hand_mode_toggled(button_pressed):
+	hand_mode_toggled.emit(button_pressed)
+
+
+func set_current_action_as_text(action:Action):
+	if action == null:
+		return
+	
+	%Current.text = \"\"
+	
+	%Current.text += str(action) + '\\n'
+	
+	var strings : int = 0
+	
+	for a in action.parallel_actions:
+		if strings >= queue_max_strings:
+			%Current.text += \"...\"
+			break
+		
+		%Current.text += '\\t' + str(a) + '\\n'
+		
+		strings += 1
+
+
+func clear_current_action_text():
+	%Current.text = \"\"
+
+
+func set_queue_as_text(queue:Array[Action]):
+	%Queue.text = \"\"
+	var strings : int = 0
+	
+	for a in queue:
+		if strings >= queue_max_strings:
+			%Queue.text += \"...\"
+			break
+		
+		%Queue.text += str(a) + '\\n'
+		
+		strings += 1
+"
+
+[node name="Base" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_jbgbt")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Control" type="Control" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="Queue" type="RichTextLabel" parent="MarginContainer/Control"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "<No actions>"
+fit_content = true
+autowrap_mode = 0
+
+[node name="Current" type="RichTextLabel" parent="MarginContainer/Control"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+text = "<No action>"
+fit_content = true
+autowrap_mode = 0
+
+[node name="SideControls" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -115.0
+grow_horizontal = 0
+grow_vertical = 2
+size_flags_horizontal = 8
+
+[node name="Buttons" type="Panel" parent="SideControls"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SideControls/Buttons"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+alignment = 1
+
+[node name="HandMode" type="CheckButton" parent="SideControls/Buttons/VBoxContainer"]
+layout_mode = 2
+text = "Hand
+mode"
+text_overrun_behavior = 2
+clip_text = true
+
+[node name="PushQueue" type="Button" parent="SideControls/Buttons/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Push 
+Queue"
+
+[connection signal="toggled" from="SideControls/Buttons/VBoxContainer/HandMode" to="." method="_on_hand_mode_toggled"]
+[connection signal="pressed" from="SideControls/Buttons/VBoxContainer/PushQueue" to="." method="_on_push_queue_pressed"]
