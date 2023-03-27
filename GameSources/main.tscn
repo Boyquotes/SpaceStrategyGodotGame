@@ -38,6 +38,10 @@ func choose(fo:FieldObject):
 	if fo == object:
 		return
 	
+	if object != null:
+		if object.tree_exiting.is_connected(_unchoose_chosen):
+			object.tree_exiting.disconnect(_unchoose_chosen)
+	
 	object = fo
 	ability = \"\"
 	
@@ -127,8 +131,6 @@ func _unhandled_input(event):
 		
 		if obj != null and obj != %Chosen.object:
 			%Chosen.choose(obj)
-			%GUI/AbilityChoosingUI.setup_for_object(obj)
-			%AbilityDrawRuleController.clear_rule()
 			
 		elif %Chosen.object != null:
 			if not %Chosen.chosen_correct_ability():
@@ -142,9 +144,6 @@ func _unhandled_input(event):
 				return
 			
 			%ActionProcessor.put_action(action)
-	
-	if event.is_action_pressed(\"ui_up\"):
-		%Chosen.object.queue_free()
 
 
 func _on_abilities_ability_completed(ability):
@@ -164,6 +163,10 @@ func _on_abilities_ability_started(ability):
 		return
 	
 	%AbilityDrawRuleController.current_draw_rule.enabled = false
+
+
+func _on_chosen_new_object():
+	%AbilityDrawRuleController.clear_rule()
 "
 
 [sub_resource type="GDScript" id="GDScript_wxxsl"]
@@ -322,10 +325,8 @@ script/source = "extends CanvasLayer
 
 
 func _on_chosen_new_object():
-	if %Chosen.has_chosen():
-		return
-	
 	$AbilityChoosingUI.clear_buttons()
+	$AbilityChoosingUI.setup_for_object(%Chosen.object)
 
 
 func _on_ability_choosing_ui_ability_button_pressed(ability_name):
@@ -490,6 +491,7 @@ script = SubResource("GDScript_8qbeo")
 [node name="base" parent="ChosenControlPanel" instance=ExtResource("4_ukry5")]
 
 [connection signal="new_ability" from="Chosen" to="ChosenControlPanel" method="_on_chosen_new_ability"]
+[connection signal="new_object" from="Chosen" to="Inputs" method="_on_chosen_new_object"]
 [connection signal="new_object" from="Chosen" to="GUI" method="_on_chosen_new_object"]
 [connection signal="new_object" from="Chosen" to="ChosenControlPanel" method="_on_chosen_new_object"]
 [connection signal="action_added" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_action_added"]

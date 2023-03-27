@@ -11,6 +11,11 @@ func _on_abilities_buttons_ability_pressed(ability):
 
 
 func setup_for_object(object:FieldObject):
+	clear_buttons()
+	
+	if not FieldObject.valid(object):
+		return
+	
 	for i in object.abilities_data.keys():
 		%AbilitiesButtons.create_button_for_ability(i)
 
