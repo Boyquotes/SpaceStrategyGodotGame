@@ -130,22 +130,22 @@ func _on_abilities_buttons_ability_pressed(ability):
 		%AbilityDrawRuleController.set_rule_for_ability(ability)
 
 
-func _on_action_processor_next_action_picked():
-	print(\"Next action picked\")
-
-
-func _on_action_processor_current_completed():
-	print(\"Action completed\")
-
-
 func _on_abilities_ability_completed(ability):
-	print(\"Completed\")
+	print(\"Abiltiy completed\")
+	
+	if not %AbilityDrawRuleController.has_active_rule():
+		return
+	
 	%AbilityDrawRuleController.current_draw_rule.enabled = true
 	%AbilityDrawRuleController.update_current()
 
 
 func _on_abilities_ability_started(ability):
 	print(\"Started\")
+	
+	if not %AbilityDrawRuleController.has_active_rule():
+		return
+	
 	%AbilityDrawRuleController.current_draw_rule.enabled = false
 "
 
@@ -176,12 +176,10 @@ func set_rule_for_ability(ability_name:String):
 		return
 	
 	if current_draw_rule != null:
-		current_draw_rule.reparent(self)
+		clear_rule()
 	
 	current_draw_rule = draw_rule
-	
 	current_draw_rule.start()
-	
 	current_draw_rule.reparent(%GameField)
 	current_draw_rule.owner = owner
 
@@ -198,8 +196,13 @@ func clear_rule():
 		return
 	
 	current_draw_rule.reparent(self)
+	
 	current_draw_rule.owner = owner
 	current_draw_rule = null
+
+
+func has_active_rule():
+	return current_draw_rule != null
 "
 
 [sub_resource type="GDScript" id="GDScript_tat8k"]
@@ -453,17 +456,15 @@ script = SubResource("GDScript_651hj")
 [node name="ActionQueueControlPanel" type="Window" parent="."]
 title = "Action queue "
 position = Vector2i(50, 50)
-size = Vector2i(500, 500)
+size = Vector2i(600, 200)
 always_on_top = true
-min_size = Vector2i(500, 500)
+min_size = Vector2i(600, 200)
 script = SubResource("GDScript_jpt61")
 
 [node name="Base" parent="ActionQueueControlPanel" instance=ExtResource("3_rxyi1")]
 
 [connection signal="action_added" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_action_added"]
-[connection signal="current_completed" from="ActionProcessor" to="Inputs" method="_on_action_processor_current_completed"]
 [connection signal="current_completed" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_current_completed"]
-[connection signal="next_action_picked" from="ActionProcessor" to="Inputs" method="_on_action_processor_next_action_picked"]
 [connection signal="next_action_picked" from="ActionProcessor" to="ActionQueueControlPanel" method="_on_action_processor_next_action_picked"]
 [connection signal="ability_completed" from="Abilities" to="Inputs" method="_on_abilities_ability_completed"]
 [connection signal="ability_started" from="Abilities" to="Inputs" method="_on_abilities_ability_started"]
