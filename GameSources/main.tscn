@@ -152,7 +152,7 @@ func _on_abilities_ability_completed(ability):
 	if not %AbilityDrawRuleController.has_active_rule():
 		return
 	
-	%AbilityDrawRuleController.current_draw_rule.enabled = true
+	%AbilityDrawRuleController.draw_waiting()
 	%AbilityDrawRuleController.update_current()
 
 
@@ -162,7 +162,7 @@ func _on_abilities_ability_started(ability):
 	if not %AbilityDrawRuleController.has_active_rule():
 		return
 	
-	%AbilityDrawRuleController.current_draw_rule.enabled = false
+	%AbilityDrawRuleController.draw_applying()
 
 
 func _on_chosen_new_object():
@@ -184,7 +184,6 @@ func _ready():
 			_draw_rules[i.get_ability_name()] = i
 
 
-
 func set_rule_for_ability(ability_name:String):
 	var draw_rule = _draw_rules.get(ability_name)
 	
@@ -204,11 +203,26 @@ func set_rule_for_ability(ability_name:String):
 	current_draw_rule.owner = owner
 
 
+func draw_applying():
+	if not has_active_rule():
+		return
+	
+	current_draw_rule.draw_applying()
+
+
+func draw_waiting():
+	if not has_active_rule():
+		return
+	
+	current_draw_rule.draw_waiting()
+
+
 func update_current():
 	if current_draw_rule == null:
 		return
 	
 	current_draw_rule.update()
+
 
 
 func clear_rule():
@@ -247,10 +261,7 @@ func _on_update():
 
 
 
-func _on_draw(field:GameField):
-	if not FieldObject.valid(_fo):
-		return
-	
+func _draw_on_waiting(field:GameField):
 	for i in field.hex_map.get_all_map_hexes():
 		if HexPlane.get_diatance(i, _fo.position) <= _fo.abilities_data[LinearMoveAbility.NAME].move_remains:
 			if (not _obstacles.has_cell(i)) and Vector2i(i) != _fo.position:
