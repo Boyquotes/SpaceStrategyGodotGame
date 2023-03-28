@@ -340,6 +340,10 @@ script/source = "extends CanvasLayer
 
 func _on_chosen_new_object():
 	$AbilityChoosingUI.clear_buttons()
+	
+	if not FieldObject.valid(%Chosen.object):
+		return
+	
 	$AbilityChoosingUI.setup_for_object(%Chosen.object)
 
 
