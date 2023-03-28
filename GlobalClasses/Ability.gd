@@ -34,7 +34,7 @@ class DefferedApplyingAction:
 		])
 
 
-signal ability_started
+signal ability_started(fo:FieldObject, target:Vector2i)
 signal ability_completed
 
 
@@ -49,7 +49,7 @@ func get_apply_action(fo:FieldObject, to:Vector2i) -> Action:
 		return EmptyAction.new()
 	
 	return ActionPack.new([
-		EmitSignalAction.new(ability_started),
+		EmitSignalAction.new(ability_started, [fo, to]),
 		result,
 		EmitSignalAction.new(ability_completed)
 	])

@@ -21,6 +21,13 @@ func _ready() -> void:
 	%FieldObjectMap.add_object(
 		FieldObjectFactory.get_instance(OBJECT, Vector2i(7, 3), FieldObject.Sides.ATTACK)
 	)
+	
+	var t = A.new()
+
+
+class A:
+	func d():
+		print(\"ABOBA\")
 "
 
 [sub_resource type="GDScript" id="GDScript_rde56"]
@@ -100,19 +107,19 @@ var cell : Vector2i = Vector2i()
 script/source = "extends Node
 
 
-signal ability_started(ability:Ability)
-signal ability_completed(ability:Ability)
+signal ability_started(ability_name:String, fo:FieldObject, target:Vector2i)
+signal ability_completed(ability_name:String)
 
 
 var abilities : Dictionary = {}
 
+
 func _ready():
 	abilities[LinearMoveAbility.NAME] = LinearMoveAbility.new()
 	
-	
 	for i in abilities.values():
-		i.ability_started.connect(func(): emit_signal(\"ability_started\", i))
-		i.ability_completed.connect(func(): emit_signal(\"ability_completed\", i))
+		i.ability_started.connect(func(fo, to): emit_signal(\"ability_started\", i.NAME, fo, to))
+		i.ability_completed.connect(func(): emit_signal(\"ability_completed\", i.NAME))
 "
 
 [sub_resource type="GDScript" id="GDScript_fkqau"]
@@ -147,22 +154,21 @@ func _unhandled_input(event):
 
 
 func _on_abilities_ability_completed(ability):
-	print(\"Abiltiy completed\")
+	print(\"%s completed\"%ability)
 	
 	if not %AbilityDrawRuleController.has_active_rule():
 		return
 	
-	%AbilityDrawRuleController.draw_waiting()
-	%AbilityDrawRuleController.update_current()
+	%AbilityDrawRuleController.draw_waiting(%Chosen.object)
 
 
-func _on_abilities_ability_started(ability):
-	print(\"Started\")
+func _on_abilities_ability_started(ability, fo:FieldObject, target:Vector2i):
+	print(\"%s Started\"%ability)
 	
 	if not %AbilityDrawRuleController.has_active_rule():
 		return
 	
-	%AbilityDrawRuleController.draw_applying()
+	%AbilityDrawRuleController.draw_applying(fo, target)
 
 
 func _on_chosen_new_object():
@@ -184,7 +190,7 @@ func _ready():
 			_draw_rules[i.get_ability_name()] = i
 
 
-func set_rule_for_ability(ability_name:String):
+func set_rule(ability_name:String, fo:FieldObject):
 	var draw_rule = _draw_rules.get(ability_name)
 	
 	if draw_rule == null:
@@ -198,30 +204,23 @@ func set_rule_for_ability(ability_name:String):
 		clear_rule()
 	
 	current_draw_rule = draw_rule
-	current_draw_rule.start()
+	current_draw_rule.go_waiting_mode(fo)
 	current_draw_rule.reparent(%GameField)
 	current_draw_rule.owner = owner
 
 
-func draw_applying():
+func draw_applying(fo:FieldObject, to:Vector2i):
 	if not has_active_rule():
 		return
 	
-	current_draw_rule.draw_applying()
+	current_draw_rule.go_applying_mode(fo, to)
 
 
-func draw_waiting():
+func draw_waiting(fo:FieldObject):
 	if not has_active_rule():
 		return
 	
-	current_draw_rule.draw_waiting()
-
-
-func update_current():
-	if current_draw_rule == null:
-		return
-	
-	current_draw_rule.update()
+	current_draw_rule.go_waiting_mode(fo)
 
 
 
@@ -245,20 +244,24 @@ script/source = "extends AbilityDrawRule
 
 var _fo : FieldObject
 var _obstacles : CellsArea
-
+var _target : Vector2i
 
 func _name():
 	return LinearMoveAbility.NAME
 
 
-func _on_start():
-	_fo = %Chosen.object
+func _enter_applying_mode(fo:FieldObject, to:Vector2i):
+	_fo = fo
+	_target = to
+
+
+func _enter_waiting_mode(fo:FieldObject):
+	_fo = fo
 	_obstacles = %FieldObjectMap.get_solid_objects_cells_area()
 
 
-func _on_update():
-	_obstacles = %FieldObjectMap.get_solid_objects_cells_area()
-
+func _draw_on_applying(field:GameField):
+	field.fill_internal_hex(_target, Color(0, 1, 0, 0.2), 0.6)
 
 
 func _draw_on_waiting(field:GameField):
@@ -347,7 +350,7 @@ func _on_ability_choosing_ui_ability_button_pressed(ability_name):
 	if %Chosen.ability != ability_name:
 		%Chosen.choose_ability(ability_name)
 		
-		%AbilityDrawRuleController.set_rule_for_ability(ability_name)
+		%AbilityDrawRuleController.set_rule(ability_name, %Chosen.object)
 "
 
 [sub_resource type="GDScript" id="GDScript_jpt61"]
