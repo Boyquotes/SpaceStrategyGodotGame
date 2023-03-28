@@ -3,7 +3,6 @@ extends Node
 class_name FieldObjectMap
 
 
-
 func add_object(fo:FieldObject):
 	add_child(fo)
 	

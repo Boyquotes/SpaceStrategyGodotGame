@@ -122,59 +122,6 @@ func _ready():
 		i.ability_completed.connect(func(): emit_signal(\"ability_completed\", i.NAME))
 "
 
-[sub_resource type="GDScript" id="GDScript_fkqau"]
-script/source = "extends Node
-
-
-func _unhandled_input(event):
-	if event is InputEventMouseMotion:
-		%MouseCell.cell = %GameField.iso_hex_transformations.pixel2hex(
-			%GameField.get_local_mouse_position()
-		)
-	
-	
-	if event.is_action_pressed(\"mouse_left\"):
-		var obj : FieldObject = %FieldObjectMap.get_first_object_on_cell(%MouseCell.cell)
-		
-		if obj != null and obj != %Chosen.object:
-			%Chosen.choose(obj)
-			
-		elif %Chosen.object != null:
-			if not %Chosen.chosen_correct_ability():
-				return
-			
-			var action : Action = %Chosen.get_apply_ability_action(
-				%MouseCell.cell
-			)
-			
-			if action == null:
-				return
-			
-			%ActionProcessor.put_action(action)
-
-
-func _on_abilities_ability_completed(ability):
-	print(\"%s completed\"%ability)
-	
-	if not %AbilityDrawRuleController.has_active_rule():
-		return
-	
-	%AbilityDrawRuleController.draw_waiting(%Chosen.object)
-
-
-func _on_abilities_ability_started(ability, fo:FieldObject, target:Vector2i):
-	print(\"%s Started\"%ability)
-	
-	if not %AbilityDrawRuleController.has_active_rule():
-		return
-	
-	%AbilityDrawRuleController.draw_applying(fo, target)
-
-
-func _on_chosen_new_object():
-	%AbilityDrawRuleController.clear_rule()
-"
-
 [sub_resource type="GDScript" id="GDScript_wxxsl"]
 script/source = "extends Node
 
@@ -332,6 +279,59 @@ func _on_draw(field:GameField):
 		field.encircle_hex(%Chosen.object.position, Color.YELLOW)
 "
 
+[sub_resource type="GDScript" id="GDScript_fkqau"]
+script/source = "extends Node
+
+
+func _unhandled_input(event):
+	if event is InputEventMouseMotion:
+		%MouseCell.cell = %GameField.iso_hex_transformations.pixel2hex(
+			%GameField.get_local_mouse_position()
+		)
+	
+	
+	if event.is_action_pressed(\"mouse_left\"):
+		var obj : FieldObject = %FieldObjectMap.get_first_object_on_cell(%MouseCell.cell)
+		
+		if obj != null:
+			if obj != %Chosen.object:
+				%Chosen.choose(obj)
+		elif %Chosen.object != null:
+			if not %Chosen.chosen_correct_ability():
+				return
+			
+			var action : Action = %Chosen.get_apply_ability_action(
+				%MouseCell.cell
+			)
+			
+			if action == null:
+				return
+			
+			%ActionProcessor.put_action(action)
+
+
+func _on_abilities_ability_started(ability, fo:FieldObject, target:Vector2i):
+	print(\"%s Started\"%ability)
+	
+	if not %AbilityDrawRuleController.has_active_rule():
+		return
+	
+	%AbilityDrawRuleController.draw_applying(fo, target)
+
+
+func _on_abilities_ability_completed(ability):
+	print(\"%s completed\"%ability)
+	
+	if not %AbilityDrawRuleController.has_active_rule():
+		return
+	
+	%AbilityDrawRuleController.draw_waiting(%Chosen.object)
+
+
+func _on_chosen_new_object():
+	%AbilityDrawRuleController.clear_rule()
+"
+
 [sub_resource type="GDScript" id="GDScript_jvw1s"]
 script/source = "extends CanvasLayer
 
@@ -410,7 +410,6 @@ func _ready():
 
 func _on_chosen_new_ability():
 	$base.set_info_for_ability(%Chosen.ability)
-	
 
 
 func _on_chosen_new_object():
@@ -455,9 +454,6 @@ script = SubResource("GDScript_8cm6s")
 unique_name_in_owner = true
 script = ExtResource("2_2rgc4")
 
-[node name="Inputs" type="Node" parent="."]
-script = SubResource("GDScript_fkqau")
-
 [node name="AbilityDrawRuleController" type="Node" parent="."]
 unique_name_in_owner = true
 script = SubResource("GDScript_wxxsl")
@@ -484,6 +480,9 @@ script = SubResource("GDScript_m5a4j")
 
 [node name="ChosenEncircle" type="Node" parent="GameField"]
 script = SubResource("GDScript_pklfo")
+
+[node name="Inputs" type="Node" parent="."]
+script = SubResource("GDScript_fkqau")
 
 [node name="GUI" type="CanvasLayer" parent="."]
 unique_name_in_owner = true

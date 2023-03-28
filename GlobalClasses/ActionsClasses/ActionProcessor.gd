@@ -38,7 +38,8 @@ func _process(delta:float):
 		current.process(delta)
 		
 		for a in current.parallel_actions:
-			a.process(delta)
+			if not a.completed:
+				a.process(delta)
 		
 		if _is_action_completed_with_parallel(current):
 			_add_to_front(current.next_actions)
