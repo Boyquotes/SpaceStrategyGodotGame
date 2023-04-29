@@ -17,17 +17,10 @@ func _ready() -> void:
 	%FieldObjectMap.add_object(
 		FieldObjectFactory.get_instance(OBJECT, Vector2i(5, 5), FieldObject.Sides.DEFENCE)
 	)
-
+	
 	%FieldObjectMap.add_object(
 		FieldObjectFactory.get_instance(OBJECT, Vector2i(7, 3), FieldObject.Sides.ATTACK)
 	)
-	
-	var t = A.new()
-
-
-class A:
-	func d():
-		print(\"ABOBA\")
 "
 
 [sub_resource type="GDScript" id="GDScript_rde56"]
@@ -83,6 +76,9 @@ func chosen_correct_ability():
 
 
 func unchoose():
+	if not has_chosen():
+		return
+	
 	object.tree_exiting.disconnect(_unchoose_chosen)
 	
 	_unchoose_chosen()
@@ -94,13 +90,6 @@ func _unchoose_chosen():
 	
 	new_object.emit()
 	new_ability.emit()
-"
-
-[sub_resource type="GDScript" id="GDScript_dgca5"]
-script/source = "extends Node
-
-
-var cell : Vector2i = Vector2i()
 "
 
 [sub_resource type="GDScript" id="GDScript_8cm6s"]
@@ -332,6 +321,13 @@ func _on_chosen_new_object():
 	%AbilityDrawRuleController.clear_rule()
 "
 
+[sub_resource type="GDScript" id="GDScript_dgca5"]
+script/source = "extends Node
+
+
+var cell : Vector2i = Vector2i()
+"
+
 [sub_resource type="GDScript" id="GDScript_jvw1s"]
 script/source = "extends CanvasLayer
 
@@ -438,10 +434,6 @@ script = SubResource("GDScript_qfrmm")
 unique_name_in_owner = true
 script = SubResource("GDScript_rde56")
 
-[node name="MouseCell" type="Node" parent="."]
-unique_name_in_owner = true
-script = SubResource("GDScript_dgca5")
-
 [node name="ActionProcessor" type="Node" parent="."]
 unique_name_in_owner = true
 script = ExtResource("1_ntvn1")
@@ -483,6 +475,10 @@ script = SubResource("GDScript_pklfo")
 
 [node name="Inputs" type="Node" parent="."]
 script = SubResource("GDScript_fkqau")
+
+[node name="MouseCell" type="Node" parent="Inputs"]
+unique_name_in_owner = true
+script = SubResource("GDScript_dgca5")
 
 [node name="GUI" type="CanvasLayer" parent="."]
 unique_name_in_owner = true
