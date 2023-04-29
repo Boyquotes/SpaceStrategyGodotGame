@@ -37,6 +37,7 @@ class DefferedApplyingAction:
 signal ability_started(fo:FieldObject, target:Vector2i)
 signal ability_completed
 
+var auto : bool = false
 
 func get_deferred_applying_action(fo:FieldObject, to:Vector2i) -> Action:
 	return DefferedApplyingAction.new(self, fo, to)

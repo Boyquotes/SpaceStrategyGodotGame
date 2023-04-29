@@ -64,7 +64,7 @@ func get_apply_ability_action(to:Vector2i) -> Action:
 		return EmptyAction.new()
 	
 	
-	return %Abilities.abilities[ability].get_deferred_applying_action(object, to)
+	return %Abilities.get_deferred_applying_action(ability, object, to)
 
 
 func has_chosen() -> bool:
@@ -109,6 +109,13 @@ func _ready():
 	for i in abilities.values():
 		i.ability_started.connect(func(fo, to): emit_signal(\"ability_started\", i.NAME, fo, to))
 		i.ability_completed.connect(func(): emit_signal(\"ability_completed\", i.NAME))
+
+
+func get_deferred_applying_action(ability_name:String, actor: FieldObject, to:Vector2) -> Action:
+	if not abilities.has(ability_name):
+		return EmptyAction.new()
+	
+	return abilities[ability_name].get_deferred_applying_action(actor, to)
 "
 
 [sub_resource type="GDScript" id="GDScript_wxxsl"]
